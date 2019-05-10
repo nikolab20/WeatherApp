@@ -2,6 +2,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -55,9 +56,30 @@ public class Serialization {
 		Date date = new Date();
 		SimpleDateFormat jdf = new SimpleDateFormat("HH:mm:ss dd-MM-yyyy");
 		String java_date = jdf.format(date);
-		
+
 		System.out.println("\nTime: " + java_date);
 		System.out.println(name + ", " + country);
 		System.out.println("Current temperature: " + currentTemp + " °C.");
+	}
+
+	public static void getLocation(String ip) throws IOException {
+		String url = "http://api.ipstack.com/" + ip + "?access_key=ab62a78a42b10b9f8c29bcf15dc8083f";
+
+		String result = getContent(url);
+		Gson gson = new GsonBuilder().create();
+		JsonObject jsonResult = gson.fromJson(result, JsonObject.class);
+
+		String city = jsonResult.get("city").getAsString();
+		String country = jsonResult.get("country_code").getAsString();
+
+		System.out.println(city + ", " + country);
+	}
+
+	public static String getExternalIpAddress() throws IOException {
+		URL whatIsMyIP = new URL("http://checkip.amazonaws.com");
+		BufferedReader in = new BufferedReader(new InputStreamReader(whatIsMyIP.openStream()));
+		String ip = in.readLine();
+
+		return ip;
 	}
 }
