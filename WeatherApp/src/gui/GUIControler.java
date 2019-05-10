@@ -1,20 +1,35 @@
+package gui;
+
+import java.awt.EventQueue;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.TimeZone;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-public class Serialization {
+public class GUIControler {
+
+	/**
+	 * Launch the application.
+	 */
+	public static void main(String[] args) {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					WeatherGUI frame = new WeatherGUI();
+					frame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
 
 	public static String getContent(String url) throws IOException {
 		URL obj = new URL(url);
@@ -40,7 +55,7 @@ public class Serialization {
 
 		return response.toString();
 	}
-
+	
 	public static void getWeather(String city) throws IOException {
 		String url = "http://api.openweathermap.org/data/2.5/weather?q=" + city
 				+ "&APPID=9a3f762719741e83715f0734f751fb5c&units=metric";
@@ -61,7 +76,7 @@ public class Serialization {
 		System.out.println(name + ", " + country);
 		System.out.println("Current temperature: " + currentTemp + " °C.");
 	}
-
+	
 	public static void getLocation(String ip) throws IOException {
 		String url = "http://api.ipstack.com/" + ip + "?access_key=ab62a78a42b10b9f8c29bcf15dc8083f";
 
