@@ -1,6 +1,7 @@
 package gui;
 
 import java.awt.EventQueue;
+import java.awt.Image;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -8,6 +9,10 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import javax.imageio.ImageIO;
+import javax.swing.JLabel;
+import javax.swing.JTextField;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -29,6 +34,8 @@ public class GUIControler {
 				}
 			}
 		});
+
+		GUIControler g = new GUIControler();
 	}
 
 	public static String getContent(String url) throws IOException {
@@ -55,8 +62,29 @@ public class GUIControler {
 
 		return response.toString();
 	}
+
+	public static void getWeather(JTextField jtfCity, JLabel lblLocation, JLabel lblTime, JLabel lblTemperature) throws IOException {
+		String url = "http://api.openweathermap.org/data/2.5/weather?q=" + jtfCity.getText()
+				+ "&APPID=9a3f762719741e83715f0734f751fb5c&units=metric";
+
+		String result = getContent(url);
+		Gson gson = new GsonBuilder().create();
+		JsonObject jsonResult = gson.fromJson(result, JsonObject.class);
+
+		String name = jsonResult.get("name").getAsString();
+		String country = jsonResult.get("sys").getAsJsonObject().get("country").getAsString();
+		String currentTemp = jsonResult.get("main").getAsJsonObject().get("temp").getAsString();
+
+		Date date = new Date();
+		SimpleDateFormat jdf = new SimpleDateFormat("HH:mm:ss dd-MM-yyyy");
+		String java_date = jdf.format(date);
+
+		lblLocation.setText(name + ", " + country);
+		lblTime.setText(java_date);
+		lblTemperature.setText(currentTemp + " °C");
+	}
 	
-	public static void getWeather(String city) throws IOException {
+	public static void getWeatherEntry(String city, JLabel lblLocation, JLabel lblTime, JLabel lblTemperature) throws IOException {
 		String url = "http://api.openweathermap.org/data/2.5/weather?q=" + city
 				+ "&APPID=9a3f762719741e83715f0734f751fb5c&units=metric";
 
@@ -72,12 +100,12 @@ public class GUIControler {
 		SimpleDateFormat jdf = new SimpleDateFormat("HH:mm:ss dd-MM-yyyy");
 		String java_date = jdf.format(date);
 
-		System.out.println("\nTime: " + java_date);
-		System.out.println(name + ", " + country);
-		System.out.println("Current temperature: " + currentTemp + " °C.");
+		lblLocation.setText(name + ", " + country);
+		lblTime.setText(java_date);
+		lblTemperature.setText(currentTemp + " °C");
 	}
-	
-	public static void getLocation(String ip) throws IOException {
+
+	public static String getLocation(String ip) throws IOException {
 		String url = "http://api.ipstack.com/" + ip + "?access_key=ab62a78a42b10b9f8c29bcf15dc8083f";
 
 		String result = getContent(url);
@@ -85,9 +113,8 @@ public class GUIControler {
 		JsonObject jsonResult = gson.fromJson(result, JsonObject.class);
 
 		String city = jsonResult.get("city").getAsString();
-		String country = jsonResult.get("country_code").getAsString();
 
-		System.out.println(city + ", " + country);
+		return city;
 	}
 
 	public static String getExternalIpAddress() throws IOException {
@@ -97,4 +124,18 @@ public class GUIControler {
 
 		return ip;
 	}
+
+	public static Image getImage() {
+		Image image = null;
+		try {
+			URL url = new URL("http://openweathermap.org/img/w/10d.png");
+			image = ImageIO.read(url);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return image;
+	}
+
 }
