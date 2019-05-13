@@ -6,12 +6,15 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.URL;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import com.google.gson.Gson;
@@ -34,105 +37,156 @@ public class GUIControler {
 				}
 			}
 		});
-
-		GUIControler g = new GUIControler();
 	}
 
-	public static String getContent(String url) throws IOException {
-		URL obj = new URL(url);
-		HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+	public static String getContent(String url, JPanel contentPane, JTextField jtfCity) {
+		URL obj;
+		try {
+			obj = new URL(url);
+			
+			HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 
-		con.setRequestMethod("GET");
+			con.setRequestMethod("GET");
 
-		BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+			BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
 
-		boolean endReading = false;
-		String response = "";
+			boolean endReading = false;
+			String response = "";
 
-		while (!endReading) {
-			String s = in.readLine();
+			while (!endReading) {
+				String s = in.readLine();
 
-			if (s != null) {
-				response += s;
-			} else {
-				endReading = true;
+				if (s != null) {
+					response += s;
+				} else {
+					endReading = true;
+				}
 			}
-		}
-		in.close();
+			in.close();
 
-		return response.toString();
+			return response.toString();
+		} catch (MalformedURLException e) {
+			JOptionPane.showMessageDialog(contentPane, "Problems with opening the URL.", "Error!",
+					JOptionPane.ERROR_MESSAGE);
+			
+			jtfCity.setText("");
+		} catch (ProtocolException e) {
+			JOptionPane.showMessageDialog(contentPane, "Problems with protocol.", "Error!",
+					JOptionPane.ERROR_MESSAGE);
+
+			jtfCity.setText("");
+		} catch (IOException e) {
+			JOptionPane.showMessageDialog(contentPane, "Problems with reading the API.", "Error!",
+					JOptionPane.ERROR_MESSAGE);
+
+			jtfCity.setText("");
+		}
+		
+		return null;
+		
 	}
 
-	public static void getWeather(JTextField jtfCity, JLabel lblLocation, JLabel lblTime, JLabel lblTemperature) throws IOException {
+	public static void getWeather(JTextField jtfCity, JLabel lblLocation, JLabel lblWeather, JLabel lblTemperature,
+			JLabel lblIcon, JPanel contentPane) {
 		String url = "http://api.openweathermap.org/data/2.5/weather?q=" + jtfCity.getText()
 				+ "&APPID=9a3f762719741e83715f0734f751fb5c&units=metric";
 
-		String result = getContent(url);
+		String result;
+
+		result = getContent(url, contentPane, jtfCity);
+
 		Gson gson = new GsonBuilder().create();
 		JsonObject jsonResult = gson.fromJson(result, JsonObject.class);
 
 		String name = jsonResult.get("name").getAsString();
 		String country = jsonResult.get("sys").getAsJsonObject().get("country").getAsString();
 		String currentTemp = jsonResult.get("main").getAsJsonObject().get("temp").getAsString();
-
-		Date date = new Date();
-		SimpleDateFormat jdf = new SimpleDateFormat("HH:mm:ss dd-MM-yyyy");
-		String java_date = jdf.format(date);
+		String weather = jsonResult.get("weather").getAsJsonArray().get(0).getAsJsonObject().get("main")
+				.getAsString();
 
 		lblLocation.setText(name + ", " + country);
-		lblTime.setText(java_date);
+		lblWeather.setText(weather);
 		lblTemperature.setText(currentTemp + " °C");
+		String icon = jsonResult.get("weather").getAsJsonArray().get(0).getAsJsonObject().get("icon").getAsString()
+				.toLowerCase();
+
+		lblIcon.setIcon(new ImageIcon(getImage(contentPane, icon)));
+		
+		jtfCity.setText("");
+
 	}
-	
-	public static void getWeatherEntry(String city, JLabel lblLocation, JLabel lblTime, JLabel lblTemperature) throws IOException {
+
+	public static void getWeatherEntry(String city, JLabel lblLocation, JLabel lblWeather, JLabel lblTemperature,
+			JLabel lblIcon, JPanel contentPane) {
 		String url = "http://api.openweathermap.org/data/2.5/weather?q=" + city
 				+ "&APPID=9a3f762719741e83715f0734f751fb5c&units=metric";
 
-		String result = getContent(url);
+		String result;
+
+		result = getContent(url, contentPane, null);
+
 		Gson gson = new GsonBuilder().create();
 		JsonObject jsonResult = gson.fromJson(result, JsonObject.class);
 
 		String name = jsonResult.get("name").getAsString();
 		String country = jsonResult.get("sys").getAsJsonObject().get("country").getAsString();
 		String currentTemp = jsonResult.get("main").getAsJsonObject().get("temp").getAsString();
-
-		Date date = new Date();
-		SimpleDateFormat jdf = new SimpleDateFormat("HH:mm:ss dd-MM-yyyy");
-		String java_date = jdf.format(date);
+		String weather = jsonResult.get("weather").getAsJsonArray().get(0).getAsJsonObject().get("main")
+				.getAsString();
 
 		lblLocation.setText(name + ", " + country);
-		lblTime.setText(java_date);
+		lblWeather.setText(weather);
 		lblTemperature.setText(currentTemp + " °C");
+
+		String icon = jsonResult.get("weather").getAsJsonArray().get(0).getAsJsonObject().get("icon").getAsString()
+				.toLowerCase();
+
+		lblIcon.setIcon(new ImageIcon(getImage(contentPane, icon)));
+		
+
 	}
 
-	public static String getLocation(String ip) throws IOException {
+	public static String getLocation(String ip, JPanel contentPane) {
 		String url = "http://api.ipstack.com/" + ip + "?access_key=ab62a78a42b10b9f8c29bcf15dc8083f";
 
-		String result = getContent(url);
+		String result;
+		String city = null;
+
+		result = getContent(url, contentPane, null);
 		Gson gson = new GsonBuilder().create();
 		JsonObject jsonResult = gson.fromJson(result, JsonObject.class);
 
-		String city = jsonResult.get("city").getAsString();
+		city = jsonResult.get("city").getAsString();
 
 		return city;
 	}
 
-	public static String getExternalIpAddress() throws IOException {
-		URL whatIsMyIP = new URL("http://checkip.amazonaws.com");
-		BufferedReader in = new BufferedReader(new InputStreamReader(whatIsMyIP.openStream()));
-		String ip = in.readLine();
+	public static String getExternalIpAddress(JPanel contentPane) {
+		URL whatIsMyIP;
+		String ip = null;
+
+		try {
+			whatIsMyIP = new URL("http://checkip.amazonaws.com");
+			BufferedReader in = new BufferedReader(new InputStreamReader(whatIsMyIP.openStream()));
+			ip = in.readLine();
+		} catch (MalformedURLException e) {
+			JOptionPane.showMessageDialog(contentPane, "Impossible access to the URL.", "Error!",
+					JOptionPane.ERROR_MESSAGE);
+		} catch (IOException e) {
+			JOptionPane.showMessageDialog(contentPane, "Problems with stream.", "Error!", JOptionPane.ERROR_MESSAGE);
+		}
 
 		return ip;
 	}
 
-	public static Image getImage() {
+	public static Image getImage(JPanel contentPane, String icon) {
 		Image image = null;
 		try {
-			URL url = new URL("http://openweathermap.org/img/w/10d.png");
+			URL url = new URL("http://openweathermap.org/img/w/" + icon + ".png");
 			image = ImageIO.read(url);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			JOptionPane.showMessageDialog(contentPane, "Impossible access to the image.", "Error!",
+					JOptionPane.ERROR_MESSAGE);
 		}
 
 		return image;
